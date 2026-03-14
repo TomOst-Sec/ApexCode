@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"strings"
 
-	"github.com/charmbracelet/crush/internal/event"
+	"github.com/apexcode/apexcode/internal/event"
 	"github.com/spf13/cobra"
 )
 
@@ -19,16 +19,16 @@ var runCmd = &cobra.Command{
 The prompt can be provided as arguments or piped from stdin.`,
 	Example: `
 # Run a simple prompt
-crush run Explain the use of context in Go
+apexcode run Explain the use of context in Go
 
 # Pipe input from stdin
-curl https://charm.land | crush run "Summarize this website"
+curl https://charm.land | apexcode run "Summarize this website"
 
 # Read from a file
-crush run "What is this code doing?" <<< prrr.go
+apexcode run "What is this code doing?" <<< prrr.go
 
 # Run in quiet mode (hide the spinner)
-crush run --quiet "Generate a README for this project"
+apexcode run --quiet "Generate a README for this project"
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		quiet, _ := cmd.Flags().GetBool("quiet")
@@ -44,7 +44,7 @@ crush run --quiet "Generate a README for this project"
 		defer app.Shutdown()
 
 		if !app.Config().IsConfigured() {
-			return fmt.Errorf("no providers configured - please run 'crush' to set up a provider interactively")
+			return fmt.Errorf("no providers configured - please run 'apexcode' to set up a provider interactively")
 		}
 
 		prompt := strings.Join(args, " ")

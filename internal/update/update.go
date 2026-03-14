@@ -13,7 +13,7 @@ import (
 
 const (
 	githubApiUrl = "https://api.github.com/repos/charmbracelet/crush/releases/latest"
-	userAgent    = "crush/1.0"
+	userAgent    = "apexcode/1.0"
 )
 
 // Default is the default [Client].

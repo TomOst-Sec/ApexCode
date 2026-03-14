@@ -4,7 +4,7 @@ import (
 	"context"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/crush/internal/uiutil"
+	"github.com/apexcode/apexcode/internal/uiutil"
 )
 
 // ExecShell parses a shell command string and executes it with exec.Command.

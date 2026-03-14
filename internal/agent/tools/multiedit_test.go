@@ -6,12 +6,12 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/filetracker"
-	"github.com/charmbracelet/crush/internal/history"
-	"github.com/charmbracelet/crush/internal/lsp"
-	"github.com/charmbracelet/crush/internal/permission"
-	"github.com/charmbracelet/crush/internal/pubsub"
+	"github.com/apexcode/apexcode/internal/csync"
+	"github.com/apexcode/apexcode/internal/filetracker"
+	"github.com/apexcode/apexcode/internal/history"
+	"github.com/apexcode/apexcode/internal/lsp"
+	"github.com/apexcode/apexcode/internal/permission"
+	"github.com/apexcode/apexcode/internal/pubsub"
 	"github.com/stretchr/testify/require"
 )
 

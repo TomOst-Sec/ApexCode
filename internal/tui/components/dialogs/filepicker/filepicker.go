@@ -12,13 +12,13 @@ import (
 	"charm.land/bubbles/v2/key"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/crush/internal/home"
-	"github.com/charmbracelet/crush/internal/message"
-	"github.com/charmbracelet/crush/internal/tui/components/core"
-	"github.com/charmbracelet/crush/internal/tui/components/dialogs"
-	"github.com/charmbracelet/crush/internal/tui/components/image"
-	"github.com/charmbracelet/crush/internal/tui/styles"
-	"github.com/charmbracelet/crush/internal/tui/util"
+	"github.com/apexcode/apexcode/internal/home"
+	"github.com/apexcode/apexcode/internal/message"
+	"github.com/apexcode/apexcode/internal/tui/components/core"
+	"github.com/apexcode/apexcode/internal/tui/components/dialogs"
+	"github.com/apexcode/apexcode/internal/tui/components/image"
+	"github.com/apexcode/apexcode/internal/tui/styles"
+	"github.com/apexcode/apexcode/internal/tui/util"
 )
 
 const (

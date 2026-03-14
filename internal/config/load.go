@@ -17,12 +17,12 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/catwalk/pkg/catwalk"
-	"github.com/charmbracelet/crush/internal/agent/hyper"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/env"
-	"github.com/charmbracelet/crush/internal/fsext"
-	"github.com/charmbracelet/crush/internal/home"
-	"github.com/charmbracelet/crush/internal/log"
+	"github.com/apexcode/apexcode/internal/agent/hyper"
+	"github.com/apexcode/apexcode/internal/csync"
+	"github.com/apexcode/apexcode/internal/env"
+	"github.com/apexcode/apexcode/internal/fsext"
+	"github.com/apexcode/apexcode/internal/home"
+	"github.com/apexcode/apexcode/internal/log"
 	powernapConfig "github.com/charmbracelet/x/powernap/pkg/config"
 	"github.com/qjebbs/go-jsons"
 )
@@ -89,15 +89,15 @@ func Load(workingDir, dataDir string, debug bool) (*Config, error) {
 	return cfg, nil
 }
 
-func PushPopCrushEnv() func() {
+func PushPopApexCodeEnv() func() {
 	found := []string{}
 	for _, ev := range os.Environ() {
-		if strings.HasPrefix(ev, "CRUSH_") {
+		if strings.HasPrefix(ev, "APEXCODE_") {
 			pair := strings.SplitN(ev, "=", 2)
 			if len(pair) != 2 {
 				continue
 			}
-			found = append(found, strings.TrimPrefix(pair[0], "CRUSH_"))
+			found = append(found, strings.TrimPrefix(pair[0], "APEXCODE_"))
 		}
 	}
 	backups := make(map[string]string)
@@ -106,7 +106,7 @@ func PushPopCrushEnv() func() {
 	}
 
 	for _, ev := range found {
-		os.Setenv(ev, os.Getenv("CRUSH_"+ev))
+		os.Setenv(ev, os.Getenv("APEXCODE_"+ev))
 	}
 
 	restore := func() {
@@ -119,7 +119,7 @@ func PushPopCrushEnv() func() {
 
 func (c *Config) configureProviders(env env.Env, resolver VariableResolver, knownProviders []catwalk.Provider) error {
 	knownProviderNames := make(map[string]bool)
-	restore := PushPopCrushEnv()
+	restore := PushPopApexCodeEnv()
 	defer restore()
 
 	// When disable_default_providers is enabled, skip all default/embedded
@@ -383,11 +383,11 @@ func (c *Config) setDefaults(workingDir, dataDir string) {
 		}
 	}
 
-	if str, ok := os.LookupEnv("CRUSH_DISABLE_PROVIDER_AUTO_UPDATE"); ok {
+	if str, ok := os.LookupEnv("APEXCODE_DISABLE_PROVIDER_AUTO_UPDATE"); ok {
 		c.Options.DisableProviderAutoUpdate, _ = strconv.ParseBool(str)
 	}
 
-	if str, ok := os.LookupEnv("CRUSH_DISABLE_DEFAULT_PROVIDERS"); ok {
+	if str, ok := os.LookupEnv("APEXCODE_DISABLE_DEFAULT_PROVIDERS"); ok {
 		c.Options.DisableDefaultProviders, _ = strconv.ParseBool(str)
 	}
 
@@ -718,8 +718,8 @@ func hasAWSCredentials(env env.Env) bool {
 
 // GlobalConfig returns the global configuration file path for the application.
 func GlobalConfig() string {
-	if crushGlobal := os.Getenv("CRUSH_GLOBAL_CONFIG"); crushGlobal != "" {
-		return filepath.Join(crushGlobal, fmt.Sprintf("%s.json", appName))
+	if apexcodeGlobal := os.Getenv("APEXCODE_GLOBAL_CONFIG"); apexcodeGlobal != "" {
+		return filepath.Join(apexcodeGlobal, fmt.Sprintf("%s.json", appName))
 	}
 	if xdgConfigHome := os.Getenv("XDG_CONFIG_HOME"); xdgConfigHome != "" {
 		return filepath.Join(xdgConfigHome, appName, fmt.Sprintf("%s.json", appName))
@@ -730,16 +730,16 @@ func GlobalConfig() string {
 // GlobalConfigData returns the path to the main data directory for the application.
 // this config is used when the app overrides configurations instead of updating the global config.
 func GlobalConfigData() string {
-	if crushData := os.Getenv("CRUSH_GLOBAL_DATA"); crushData != "" {
-		return filepath.Join(crushData, fmt.Sprintf("%s.json", appName))
+	if apexcodeData := os.Getenv("APEXCODE_GLOBAL_DATA"); apexcodeData != "" {
+		return filepath.Join(apexcodeData, fmt.Sprintf("%s.json", appName))
 	}
 	if xdgDataHome := os.Getenv("XDG_DATA_HOME"); xdgDataHome != "" {
 		return filepath.Join(xdgDataHome, appName, fmt.Sprintf("%s.json", appName))
 	}
 
 	// return the path to the main data directory
-	// for windows, it should be in `%LOCALAPPDATA%/crush/`
-	// for linux and macOS, it should be in `$HOME/.local/share/crush/`
+	// for windows, it should be in `%LOCALAPPDATA%/apexcode/`
+	// for linux and macOS, it should be in `$HOME/.local/share/apexcode/`
 	if runtime.GOOS == "windows" {
 		localAppData := cmp.Or(
 			os.Getenv("LOCALAPPDATA"),
@@ -770,8 +770,8 @@ func isInsideWorktree() bool {
 // Skills in these directories are auto-discovered and their files can be read
 // without permission prompts.
 func GlobalSkillsDirs() []string {
-	if crushSkills := os.Getenv("CRUSH_SKILLS_DIR"); crushSkills != "" {
-		return []string{crushSkills}
+	if apexcodeSkills := os.Getenv("APEXCODE_SKILLS_DIR"); apexcodeSkills != "" {
+		return []string{apexcodeSkills}
 	}
 
 	// Determine the base config directory.

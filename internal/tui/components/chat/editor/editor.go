@@ -16,20 +16,20 @@ import (
 	"charm.land/bubbles/v2/textarea"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/crush/internal/app"
-	"github.com/charmbracelet/crush/internal/filetracker"
-	"github.com/charmbracelet/crush/internal/fsext"
-	"github.com/charmbracelet/crush/internal/message"
-	"github.com/charmbracelet/crush/internal/session"
-	"github.com/charmbracelet/crush/internal/tui/components/chat"
-	"github.com/charmbracelet/crush/internal/tui/components/completions"
-	"github.com/charmbracelet/crush/internal/tui/components/core/layout"
-	"github.com/charmbracelet/crush/internal/tui/components/dialogs"
-	"github.com/charmbracelet/crush/internal/tui/components/dialogs/commands"
-	"github.com/charmbracelet/crush/internal/tui/components/dialogs/filepicker"
-	"github.com/charmbracelet/crush/internal/tui/components/dialogs/quit"
-	"github.com/charmbracelet/crush/internal/tui/styles"
-	"github.com/charmbracelet/crush/internal/tui/util"
+	"github.com/apexcode/apexcode/internal/app"
+	"github.com/apexcode/apexcode/internal/filetracker"
+	"github.com/apexcode/apexcode/internal/fsext"
+	"github.com/apexcode/apexcode/internal/message"
+	"github.com/apexcode/apexcode/internal/session"
+	"github.com/apexcode/apexcode/internal/tui/components/chat"
+	"github.com/apexcode/apexcode/internal/tui/components/completions"
+	"github.com/apexcode/apexcode/internal/tui/components/core/layout"
+	"github.com/apexcode/apexcode/internal/tui/components/dialogs"
+	"github.com/apexcode/apexcode/internal/tui/components/dialogs/commands"
+	"github.com/apexcode/apexcode/internal/tui/components/dialogs/filepicker"
+	"github.com/apexcode/apexcode/internal/tui/components/dialogs/quit"
+	"github.com/apexcode/apexcode/internal/tui/styles"
+	"github.com/apexcode/apexcode/internal/tui/util"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/charmbracelet/x/editor"
 )
@@ -108,7 +108,7 @@ func (m *editorCmp) openEditor(value string) tea.Cmd {
 		return util.ReportError(err)
 	}
 	cmd, err := editor.Command(
-		"crush",
+		"apexcode",
 		tmpfile.Name(),
 		editor.AtPosition(
 			m.textarea.Line()+1,
@@ -391,7 +391,7 @@ func (m *editorCmp) Update(msg tea.Msg) (util.Model, tea.Cmd) {
 			} else {
 				// We have image data from the clipboard
 				// Create a temporary file to store the clipboard image data
-				tempFile, err := os.CreateTemp("", "clipboard_image_crush_*")
+				tempFile, err := os.CreateTemp("", "clipboard_image_apexcode_*")
 				if err != nil {
 					return m, util.ReportError(err)
 				}

@@ -15,20 +15,20 @@ import (
 	"time"
 
 	"github.com/charmbracelet/catwalk/pkg/catwalk"
-	hyperp "github.com/charmbracelet/crush/internal/agent/hyper"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/env"
-	"github.com/charmbracelet/crush/internal/oauth"
-	"github.com/charmbracelet/crush/internal/oauth/copilot"
-	"github.com/charmbracelet/crush/internal/oauth/hyper"
+	hyperp "github.com/apexcode/apexcode/internal/agent/hyper"
+	"github.com/apexcode/apexcode/internal/csync"
+	"github.com/apexcode/apexcode/internal/env"
+	"github.com/apexcode/apexcode/internal/oauth"
+	"github.com/apexcode/apexcode/internal/oauth/copilot"
+	"github.com/apexcode/apexcode/internal/oauth/hyper"
 	"github.com/invopop/jsonschema"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"
 )
 
 const (
-	appName              = "crush"
-	defaultDataDirectory = ".crush"
+	appName              = "apexcode"
+	defaultDataDirectory = ".apexcode"
 	defaultInitializeAs  = "AGENTS.md"
 )
 
@@ -40,12 +40,12 @@ var defaultContextPaths = []string{
 	"CLAUDE.local.md",
 	"GEMINI.md",
 	"gemini.md",
-	"crush.md",
-	"crush.local.md",
-	"Crush.md",
-	"Crush.local.md",
-	"CRUSH.md",
-	"CRUSH.local.md",
+	"apexcode.md",
+	"apexcode.local.md",
+	"ApexCode.md",
+	"ApexCode.local.md",
+	"APEXCODE.md",
+	"APEXCODE.local.md",
 	"AGENTS.md",
 	"agents.md",
 	"Agents.md",
@@ -226,7 +226,7 @@ const (
 type Attribution struct {
 	TrailerStyle  TrailerStyle `json:"trailer_style,omitempty" jsonschema:"description=Style of attribution trailer to add to commits,enum=none,enum=co-authored-by,enum=assisted-by,default=assisted-by"`
 	CoAuthoredBy  *bool        `json:"co_authored_by,omitempty" jsonschema:"description=Deprecated: use trailer_style instead"`
-	GeneratedWith bool         `json:"generated_with,omitempty" jsonschema:"description=Add Generated with Crush line to commit messages and issues and PRs,default=true"`
+	GeneratedWith bool         `json:"generated_with,omitempty" jsonschema:"description=Add Generated with ApexCode line to commit messages and issues and PRs,default=true"`
 }
 
 // JSONSchemaExtend marks the co_authored_by field as deprecated in the schema.
@@ -239,19 +239,19 @@ func (Attribution) JSONSchemaExtend(schema *jsonschema.Schema) {
 }
 
 type Options struct {
-	ContextPaths              []string     `json:"context_paths,omitempty" jsonschema:"description=Paths to files containing context information for the AI,example=.cursorrules,example=CRUSH.md"`
-	SkillsPaths               []string     `json:"skills_paths,omitempty" jsonschema:"description=Paths to directories containing Agent Skills (folders with SKILL.md files),example=~/.config/crush/skills,example=./skills"`
+	ContextPaths              []string     `json:"context_paths,omitempty" jsonschema:"description=Paths to files containing context information for the AI,example=.cursorrules,example=APEXCODE.md"`
+	SkillsPaths               []string     `json:"skills_paths,omitempty" jsonschema:"description=Paths to directories containing Agent Skills (folders with SKILL.md files),example=~/.config/apexcode/skills,example=./skills"`
 	TUI                       *TUIOptions  `json:"tui,omitempty" jsonschema:"description=Terminal user interface options"`
 	Debug                     bool         `json:"debug,omitempty" jsonschema:"description=Enable debug logging,default=false"`
 	DebugLSP                  bool         `json:"debug_lsp,omitempty" jsonschema:"description=Enable debug logging for LSP servers,default=false"`
 	DisableAutoSummarize      bool         `json:"disable_auto_summarize,omitempty" jsonschema:"description=Disable automatic conversation summarization,default=false"`
-	DataDirectory             string       `json:"data_directory,omitempty" jsonschema:"description=Directory for storing application data (relative to working directory),default=.crush,example=.crush"` // Relative to the cwd
+	DataDirectory             string       `json:"data_directory,omitempty" jsonschema:"description=Directory for storing application data (relative to working directory),default=.apexcode,example=.apexcode"` // Relative to the cwd
 	DisabledTools             []string     `json:"disabled_tools,omitempty" jsonschema:"description=List of built-in tools to disable and hide from the agent,example=bash,example=sourcegraph"`
 	DisableProviderAutoUpdate bool         `json:"disable_provider_auto_update,omitempty" jsonschema:"description=Disable providers auto-update,default=false"`
 	DisableDefaultProviders   bool         `json:"disable_default_providers,omitempty" jsonschema:"description=Ignore all default/embedded providers. When enabled, providers must be fully specified in the config file with base_url, models, and api_key - no merging with defaults occurs,default=false"`
 	Attribution               *Attribution `json:"attribution,omitempty" jsonschema:"description=Attribution settings for generated content"`
 	DisableMetrics            bool         `json:"disable_metrics,omitempty" jsonschema:"description=Disable sending metrics,default=false"`
-	InitializeAs              string       `json:"initialize_as,omitempty" jsonschema:"description=Name of the context file to create/update during project initialization,default=AGENTS.md,example=AGENTS.md,example=CRUSH.md,example=CLAUDE.md,example=docs/LLMs.md"`
+	InitializeAs              string       `json:"initialize_as,omitempty" jsonschema:"description=Name of the context file to create/update during project initialization,default=AGENTS.md,example=AGENTS.md,example=APEXCODE.md,example=CLAUDE.md,example=docs/LLMs.md"`
 }
 
 type MCPs map[string]MCPConfig
@@ -353,7 +353,7 @@ func (t ToolLs) Limits() (depth, items int) {
 	return ptrValOr(t.MaxDepth, 0), ptrValOr(t.MaxItems, 0)
 }
 
-// Config holds the configuration for crush.
+// Config holds the configuration for apexcode.
 type Config struct {
 	Schema string `json:"$schema,omitempty"`
 

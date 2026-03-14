@@ -5,12 +5,12 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/crush/internal/app"
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/lsp"
-	"github.com/charmbracelet/crush/internal/tui/components/core"
-	"github.com/charmbracelet/crush/internal/tui/styles"
+	"github.com/apexcode/apexcode/internal/app"
+	"github.com/apexcode/apexcode/internal/config"
+	"github.com/apexcode/apexcode/internal/csync"
+	"github.com/apexcode/apexcode/internal/lsp"
+	"github.com/apexcode/apexcode/internal/tui/components/core"
+	"github.com/apexcode/apexcode/internal/tui/styles"
 )
 
 // RenderOptions contains options for rendering LSP lists.

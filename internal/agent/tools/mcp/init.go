@@ -1,5 +1,5 @@
 // Package mcp provides functionality for managing Model Context Protocol (MCP)
-// clients within the Crush application.
+// clients within the ApexCode application.
 package mcp
 
 import (
@@ -16,12 +16,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/home"
-	"github.com/charmbracelet/crush/internal/permission"
-	"github.com/charmbracelet/crush/internal/pubsub"
-	"github.com/charmbracelet/crush/internal/version"
+	"github.com/apexcode/apexcode/internal/config"
+	"github.com/apexcode/apexcode/internal/csync"
+	"github.com/apexcode/apexcode/internal/home"
+	"github.com/apexcode/apexcode/internal/permission"
+	"github.com/apexcode/apexcode/internal/pubsub"
+	"github.com/apexcode/apexcode/internal/version"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -285,9 +285,9 @@ func createSession(ctx context.Context, name string, m config.MCPConfig, resolve
 
 	client := mcp.NewClient(
 		&mcp.Implementation{
-			Name:    "crush",
+			Name:    "apexcode",
 			Version: version.Version,
-			Title:   "Crush",
+			Title:   "ApexCode",
 		},
 		&mcp.ClientOptions{
 			ToolListChangedHandler: func(context.Context, *mcp.ToolListChangedRequest) {

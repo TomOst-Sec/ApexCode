@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log/slog"
 	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/charmbracelet/crush/internal/csync"
+	"github.com/apexcode/apexcode/internal/csync"
 )
 
 const (
@@ -61,7 +62,9 @@ type BackgroundShell struct {
 
 // BackgroundShellManager manages background shell instances.
 type BackgroundShellManager struct {
-	shells *csync.Map[string, *BackgroundShell]
+	shells       *csync.Map[string, *BackgroundShell]
+	stopCleanup  chan struct{}
+	cleanupDone  chan struct{}
 }
 
 var (
@@ -70,11 +73,41 @@ var (
 	idCounter             atomic.Uint64
 )
 
-// newBackgroundShellManager creates a new BackgroundShellManager instance.
+// newBackgroundShellManager creates a new BackgroundShellManager instance
+// and starts a background cleanup goroutine.
 func newBackgroundShellManager() *BackgroundShellManager {
-	return &BackgroundShellManager{
-		shells: csync.NewMap[string, *BackgroundShell](),
+	m := &BackgroundShellManager{
+		shells:      csync.NewMap[string, *BackgroundShell](),
+		stopCleanup: make(chan struct{}),
+		cleanupDone: make(chan struct{}),
 	}
+	// Start proactive cleanup goroutine
+	go m.cleanupLoop()
+	return m
+}
+
+// cleanupLoop periodically removes old completed jobs to prevent memory leaks.
+func (m *BackgroundShellManager) cleanupLoop() {
+	defer close(m.cleanupDone)
+	ticker := time.NewTicker(15 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-m.stopCleanup:
+			return
+		case <-ticker.C:
+			if cleaned := m.Cleanup(); cleaned > 0 {
+				slog.Debug("Cleaned up old background jobs", "count", cleaned)
+			}
+		}
+	}
+}
+
+// StopCleanup stops the background cleanup goroutine.
+func (m *BackgroundShellManager) StopCleanup() {
+	close(m.stopCleanup)
+	<-m.cleanupDone
 }
 
 // GetBackgroundShellManager returns the singleton background shell manager.
@@ -118,6 +151,13 @@ func (m *BackgroundShellManager) Start(ctx context.Context, workingDir string, b
 
 	go func() {
 		defer close(bgShell.done)
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("Panic in background shell", "id", id, "command", command, "panic", r)
+				bgShell.exitErr = fmt.Errorf("panic: %v", r)
+				atomic.StoreInt64(&bgShell.completedAt, time.Now().Unix())
+			}
+		}()
 
 		err := shell.ExecStream(shellCtx, command, bgShell.stdout, bgShell.stderr)
 
@@ -197,9 +237,25 @@ func (m *BackgroundShellManager) KillAll() {
 	m.shells.Reset(map[string]*BackgroundShell{})
 	done := make(chan struct{}, 1)
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				slog.Error("Panic while killing background shells", "panic", r)
+			}
+			// Always signal done, even on panic.
+			select {
+			case done <- struct{}{}:
+			default:
+			}
+		}()
+
 		var wg sync.WaitGroup
 		for _, shell := range shells {
 			wg.Go(func() {
+				defer func() {
+					if r := recover(); r != nil {
+						slog.Error("Panic while killing shell", "id", shell.ID, "panic", r)
+					}
+				}()
 				shell.cancel()
 				<-shell.done
 			})

@@ -9,10 +9,10 @@ import (
 	"charm.land/bubbles/v2/spinner"
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/crush/internal/oauth"
-	"github.com/charmbracelet/crush/internal/oauth/copilot"
-	"github.com/charmbracelet/crush/internal/tui/styles"
-	"github.com/charmbracelet/crush/internal/tui/util"
+	"github.com/apexcode/apexcode/internal/oauth"
+	"github.com/apexcode/apexcode/internal/oauth/copilot"
+	"github.com/apexcode/apexcode/internal/tui/styles"
+	"github.com/apexcode/apexcode/internal/tui/util"
 	"github.com/pkg/browser"
 )
 

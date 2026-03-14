@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/charmbracelet/crush/internal/version"
+	"github.com/apexcode/apexcode/internal/version"
 	"github.com/posthog/posthog-go"
 )
 
@@ -92,7 +92,7 @@ func Error(err any, props ...any) {
 		reflect.TypeOf(err).String(),
 		fmt.Sprintf("%v", err),
 	))
-	if err != nil {
+	if posthogErr != nil {
 		slog.Error("Failed to enqueue PostHog error", "err", err, "props", props, "posthogErr", posthogErr)
 		return
 	}

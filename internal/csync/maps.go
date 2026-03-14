@@ -28,12 +28,21 @@ func NewMapFrom[K comparable, V any](m map[K]V) *Map[K, V] {
 }
 
 // NewLazyMap creates a new lazy-loaded map. The provided load function is
-// executed in a separate goroutine to populate the map.
+// executed in a separate goroutine to populate the map. If the load function
+// panics, the panic is recovered and the map will be initialized as empty.
 func NewLazyMap[K comparable, V any](load func() map[K]V) *Map[K, V] {
 	m := &Map[K, V]{}
 	m.mu.Lock()
 	go func() {
 		defer m.mu.Unlock()
+		defer func() {
+			if r := recover(); r != nil {
+				// On panic, ensure the map is at least initialized to empty.
+				if m.inner == nil {
+					m.inner = make(map[K]V)
+				}
+			}
+		}()
 		m.inner = load()
 	}()
 	return m
@@ -76,14 +85,33 @@ func (m *Map[K, V]) Len() int {
 }
 
 // GetOrSet gets and returns the key if it exists, otherwise, it executes the
-// given function, set its return value for the given key, and returns it.
+// given function, sets its return value for the given key, and returns it.
+// This operation is atomic - the function will only be called once for a given
+// key even under concurrent access.
 func (m *Map[K, V]) GetOrSet(key K, fn func() V) V {
-	got, ok := m.Get(key)
-	if ok {
-		return got
+	// First try with read lock for the common case where key exists.
+	m.mu.RLock()
+	if v, ok := m.inner[key]; ok {
+		m.mu.RUnlock()
+		return v
 	}
+	m.mu.RUnlock()
+
+	// Key doesn't exist, acquire write lock and check again.
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	// Double-check after acquiring write lock to avoid race condition.
+	if v, ok := m.inner[key]; ok {
+		return v
+	}
+
+	// Key still doesn't exist, compute and store the value.
 	value := fn()
-	m.Set(key, value)
+	if m.inner == nil {
+		m.inner = make(map[K]V)
+	}
+	m.inner[key] = value
 	return value
 }
 
@@ -103,7 +131,41 @@ func (m *Map[K, V]) Copy() map[K]V {
 	return maps.Clone(m.inner)
 }
 
+// IsEmpty returns true if the map has no items. O(1) operation.
+func (m *Map[K, V]) IsEmpty() bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return len(m.inner) == 0
+}
+
+// Keys returns a slice of all keys in the map. More efficient than Seq2
+// when you only need keys.
+func (m *Map[K, V]) Keys() []K {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	keys := make([]K, 0, len(m.inner))
+	for k := range m.inner {
+		keys = append(keys, k)
+	}
+	return keys
+}
+
+// Range iterates over the map while holding the read lock. This is more
+// efficient than Seq2 when you don't need to modify the map during iteration.
+// WARNING: Do not call any Map methods from within fn or you will deadlock.
+func (m *Map[K, V]) Range(fn func(K, V) bool) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for k, v := range m.inner {
+		if !fn(k, v) {
+			return
+		}
+	}
+}
+
 // Seq2 returns an iter.Seq2 that yields key-value pairs from the map.
+// This creates a snapshot copy of the map, so modifications during iteration
+// are safe but won't be reflected. For read-only iteration, prefer Range().
 func (m *Map[K, V]) Seq2() iter.Seq2[K, V] {
 	dst := m.Copy()
 	return func(yield func(K, V) bool) {
@@ -116,6 +178,7 @@ func (m *Map[K, V]) Seq2() iter.Seq2[K, V] {
 }
 
 // Seq returns an iter.Seq that yields values from the map.
+// This creates a snapshot copy of the map. For read-only iteration, prefer Range().
 func (m *Map[K, V]) Seq() iter.Seq[V] {
 	return func(yield func(V) bool) {
 		for _, v := range m.Seq2() {

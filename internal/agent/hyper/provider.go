@@ -24,7 +24,7 @@ import (
 	"charm.land/fantasy"
 	"charm.land/fantasy/object"
 	"github.com/charmbracelet/catwalk/pkg/catwalk"
-	"github.com/charmbracelet/crush/internal/event"
+	"github.com/apexcode/apexcode/internal/event"
 )
 
 //go:generate wget -O provider.json https://console.charm.land/api/v1/provider
@@ -37,7 +37,7 @@ var Enabled = sync.OnceValue(func() bool {
 	b, _ := strconv.ParseBool(
 		cmp.Or(
 			os.Getenv("HYPER"),
-			os.Getenv("HYPERCRUSH"),
+			os.Getenv("HYPERAPEXCODE"),
 			os.Getenv("HYPER_ENABLE"),
 			os.Getenv("HYPER_ENABLED"),
 		),
@@ -86,7 +86,7 @@ func New(opts ...Option) (fantasy.Provider, error) {
 		baseURL: BaseURL() + "/api/v1/fantasy",
 		name:    Name,
 		headers: map[string]string{
-			"x-crush-id": event.GetID(),
+			"x-apexcode-id": event.GetID(),
 		},
 		client: &http.Client{Timeout: 0}, // stream-safe
 	}

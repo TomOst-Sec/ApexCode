@@ -13,11 +13,11 @@ import (
 	"unicode/utf8"
 
 	"charm.land/fantasy"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/filepathext"
-	"github.com/charmbracelet/crush/internal/filetracker"
-	"github.com/charmbracelet/crush/internal/lsp"
-	"github.com/charmbracelet/crush/internal/permission"
+	"github.com/apexcode/apexcode/internal/csync"
+	"github.com/apexcode/apexcode/internal/filepathext"
+	"github.com/apexcode/apexcode/internal/filetracker"
+	"github.com/apexcode/apexcode/internal/lsp"
+	"github.com/apexcode/apexcode/internal/permission"
 )
 
 //go:embed view.md
@@ -206,24 +206,36 @@ func addLineNumbers(content string, startLine int) string {
 		return ""
 	}
 
-	lines := strings.Split(content, "\n")
+	// Count lines to pre-allocate builder capacity.
+	lineCount := strings.Count(content, "\n") + 1
+	// Estimate: 6 chars for line num + 1 for pipe + avg 40 chars per line + 1 for newline
+	estimatedSize := lineCount * 50
 
-	var result []string
-	for i, line := range lines {
-		line = strings.TrimSuffix(line, "\r")
+	var sb strings.Builder
+	sb.Grow(estimatedSize)
 
-		lineNum := i + startLine
-		numStr := fmt.Sprintf("%d", lineNum)
+	lineNum := startLine
+	start := 0
+	for i := 0; i <= len(content); i++ {
+		if i == len(content) || content[i] == '\n' {
+			line := content[start:i]
+			// Trim carriage return if present.
+			if len(line) > 0 && line[len(line)-1] == '\r' {
+				line = line[:len(line)-1]
+			}
 
-		if len(numStr) >= 6 {
-			result = append(result, fmt.Sprintf("%s|%s", numStr, line))
-		} else {
-			paddedNum := fmt.Sprintf("%6s", numStr)
-			result = append(result, fmt.Sprintf("%s|%s", paddedNum, line))
+			// Write padded line number.
+			fmt.Fprintf(&sb, "%6d|%s", lineNum, line)
+			if i < len(content) {
+				sb.WriteByte('\n')
+			}
+
+			lineNum++
+			start = i + 1
 		}
 	}
 
-	return strings.Join(result, "\n")
+	return sb.String()
 }
 
 func readTextFile(filePath string, offset, limit int) (string, int, error) {

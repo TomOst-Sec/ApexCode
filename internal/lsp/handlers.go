@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"log/slog"
 
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/lsp/util"
+	"github.com/apexcode/apexcode/internal/config"
+	"github.com/apexcode/apexcode/internal/lsp/util"
 	"github.com/charmbracelet/x/powernap/pkg/lsp/protocol"
 )
 

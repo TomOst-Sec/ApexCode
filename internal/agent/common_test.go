@@ -15,16 +15,16 @@ import (
 	"charm.land/fantasy/providers/openrouter"
 	"charm.land/x/vcr"
 	"github.com/charmbracelet/catwalk/pkg/catwalk"
-	"github.com/charmbracelet/crush/internal/agent/prompt"
-	"github.com/charmbracelet/crush/internal/agent/tools"
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/db"
-	"github.com/charmbracelet/crush/internal/history"
-	"github.com/charmbracelet/crush/internal/lsp"
-	"github.com/charmbracelet/crush/internal/message"
-	"github.com/charmbracelet/crush/internal/permission"
-	"github.com/charmbracelet/crush/internal/session"
+	"github.com/apexcode/apexcode/internal/agent/prompt"
+	"github.com/apexcode/apexcode/internal/agent/tools"
+	"github.com/apexcode/apexcode/internal/config"
+	"github.com/apexcode/apexcode/internal/csync"
+	"github.com/apexcode/apexcode/internal/db"
+	"github.com/apexcode/apexcode/internal/history"
+	"github.com/apexcode/apexcode/internal/lsp"
+	"github.com/apexcode/apexcode/internal/message"
+	"github.com/apexcode/apexcode/internal/permission"
+	"github.com/apexcode/apexcode/internal/session"
 	"github.com/stretchr/testify/require"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -51,7 +51,7 @@ type modelPair struct {
 func anthropicBuilder(model string) builderFunc {
 	return func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, error) {
 		provider, err := anthropic.New(
-			anthropic.WithAPIKey(os.Getenv("CRUSH_ANTHROPIC_API_KEY")),
+			anthropic.WithAPIKey(os.Getenv("APEXCODE_ANTHROPIC_API_KEY")),
 			anthropic.WithHTTPClient(&http.Client{Transport: r}),
 		)
 		if err != nil {
@@ -64,7 +64,7 @@ func anthropicBuilder(model string) builderFunc {
 func openaiBuilder(model string) builderFunc {
 	return func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, error) {
 		provider, err := openai.New(
-			openai.WithAPIKey(os.Getenv("CRUSH_OPENAI_API_KEY")),
+			openai.WithAPIKey(os.Getenv("APEXCODE_OPENAI_API_KEY")),
 			openai.WithHTTPClient(&http.Client{Transport: r}),
 		)
 		if err != nil {
@@ -77,7 +77,7 @@ func openaiBuilder(model string) builderFunc {
 func openRouterBuilder(model string) builderFunc {
 	return func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, error) {
 		provider, err := openrouter.New(
-			openrouter.WithAPIKey(os.Getenv("CRUSH_OPENROUTER_API_KEY")),
+			openrouter.WithAPIKey(os.Getenv("APEXCODE_OPENROUTER_API_KEY")),
 			openrouter.WithHTTPClient(&http.Client{Transport: r}),
 		)
 		if err != nil {
@@ -91,7 +91,7 @@ func zAIBuilder(model string) builderFunc {
 	return func(t *testing.T, r *vcr.Recorder) (fantasy.LanguageModel, error) {
 		provider, err := openaicompat.New(
 			openaicompat.WithBaseURL("https://api.z.ai/api/coding/paas/v4"),
-			openaicompat.WithAPIKey(os.Getenv("CRUSH_ZAI_API_KEY")),
+			openaicompat.WithAPIKey(os.Getenv("APEXCODE_ZAI_API_KEY")),
 			openaicompat.WithHTTPClient(&http.Client{Transport: r}),
 		)
 		if err != nil {
@@ -102,7 +102,7 @@ func zAIBuilder(model string) builderFunc {
 }
 
 func testEnv(t *testing.T) fakeEnv {
-	workingDir := filepath.Join("/tmp/crush-test/", t.Name())
+	workingDir := filepath.Join("/tmp/apexcode-test/", t.Name())
 	os.RemoveAll(workingDir)
 
 	err := os.MkdirAll(workingDir, 0o755)
@@ -172,7 +172,7 @@ func coderAgent(r *vcr.Recorder, env fakeEnv, large, small fantasy.LanguageModel
 	}
 
 	// NOTE(@andreynering): Set a fixed config to ensure cassettes match
-	// independently of user config on `$HOME/.config/crush/crush.json`.
+	// independently of user config on `$HOME/.config/apexcode/apexcode.json`.
 	cfg.Options.Attribution = &config.Attribution{
 		TrailerStyle:  "co-authored-by",
 		GeneratedWith: true,

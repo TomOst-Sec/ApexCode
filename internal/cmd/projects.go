@@ -6,7 +6,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"charm.land/lipgloss/v2/table"
-	"github.com/charmbracelet/crush/internal/projects"
+	"github.com/apexcode/apexcode/internal/projects"
 	"github.com/charmbracelet/x/term"
 	"github.com/spf13/cobra"
 )
@@ -14,13 +14,13 @@ import (
 var projectsCmd = &cobra.Command{
 	Use:   "projects",
 	Short: "List project directories",
-	Long:  "List directories where Crush project data is known to exist",
+	Long:  "List directories where ApexCode project data is known to exist",
 	Example: `
 # List all projects in a table
-crush projects
+apexcode projects
 
 # Output projects data as JSON
-crush projects --json
+apexcode projects --json
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		jsonOutput, _ := cmd.Flags().GetBool("json")

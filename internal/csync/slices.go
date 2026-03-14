@@ -12,10 +12,19 @@ type LazySlice[K any] struct {
 }
 
 // NewLazySlice creates a new slice and runs the [load] function in a goroutine
-// to populate it.
+// to populate it. If the load function panics, the panic is recovered and the
+// slice will remain empty.
 func NewLazySlice[K any](load func() []K) *LazySlice[K] {
 	s := &LazySlice[K]{}
 	s.wg.Go(func() {
+		defer func() {
+			if r := recover(); r != nil {
+				// On panic, ensure the slice is at least initialized to empty.
+				if s.inner == nil {
+					s.inner = make([]K, 0)
+				}
+			}
+		}()
 		s.inner = load()
 	})
 	return s
@@ -78,6 +87,26 @@ func (s *Slice[T]) Len() int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	return len(s.inner)
+}
+
+// IsEmpty returns true if the slice has no elements. O(1) operation.
+func (s *Slice[T]) IsEmpty() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return len(s.inner) == 0
+}
+
+// Range iterates over the slice while holding the read lock. This is more
+// efficient than Seq/Seq2 when you don't need to modify the slice during iteration.
+// WARNING: Do not call any Slice methods from within fn or you will deadlock.
+func (s *Slice[T]) Range(fn func(int, T) bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for i, v := range s.inner {
+		if !fn(i, v) {
+			return
+		}
+	}
 }
 
 // SetSlice replaces the entire slice with a new one.

@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/charmbracelet/crush/internal/session"
-	"github.com/charmbracelet/crush/internal/tui/styles"
+	"github.com/apexcode/apexcode/internal/session"
+	"github.com/apexcode/apexcode/internal/tui/styles"
 	"github.com/charmbracelet/x/ansi"
 )
 

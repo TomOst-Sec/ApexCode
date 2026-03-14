@@ -15,14 +15,14 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/colorprofile"
-	"github.com/charmbracelet/crush/internal/app"
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/db"
-	"github.com/charmbracelet/crush/internal/event"
-	"github.com/charmbracelet/crush/internal/projects"
-	"github.com/charmbracelet/crush/internal/stringext"
-	"github.com/charmbracelet/crush/internal/tui"
-	"github.com/charmbracelet/crush/internal/version"
+	"github.com/apexcode/apexcode/internal/app"
+	"github.com/apexcode/apexcode/internal/config"
+	"github.com/apexcode/apexcode/internal/db"
+	"github.com/apexcode/apexcode/internal/event"
+	"github.com/apexcode/apexcode/internal/projects"
+	"github.com/apexcode/apexcode/internal/stringext"
+	"github.com/apexcode/apexcode/internal/tui"
+	"github.com/apexcode/apexcode/internal/version"
 	"github.com/charmbracelet/fang"
 	uv "github.com/charmbracelet/ultraviolet"
 	"github.com/charmbracelet/x/ansi"
@@ -33,7 +33,7 @@ import (
 
 func init() {
 	rootCmd.PersistentFlags().StringP("cwd", "c", "", "Current working directory")
-	rootCmd.PersistentFlags().StringP("data-dir", "D", "", "Custom crush data directory")
+	rootCmd.PersistentFlags().StringP("data-dir", "D", "", "Custom apexcode data directory")
 	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Debug")
 	rootCmd.Flags().BoolP("help", "h", false, "Help")
 	rootCmd.Flags().BoolP("yolo", "y", false, "Automatically accept all permissions (dangerous mode)")
@@ -50,30 +50,30 @@ func init() {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "crush",
+	Use:   "apexcode",
 	Short: "An AI assistant for software development",
 	Long:  "An AI assistant for software development and similar tasks with direct access to the terminal",
 	Example: `
 # Run in interactive mode
-crush
+apexcode
 
 # Run with debug logging
-crush -d
+apexcode -d
 
 # Run with debug logging in a specific directory
-crush -d -c /path/to/project
+apexcode -d -c /path/to/project
 
 # Run with custom data directory
-crush -D /path/to/custom/.crush
+apexcode -D /path/to/custom/.apexcode
 
 # Print version
-crush -v
+apexcode -v
 
 # Run a single non-interactive prompt
-crush run "Explain the use of context in Go"
+apexcode run "Explain the use of context in Go"
 
 # Run in dangerous mode (auto-accept all permissions)
-crush -y
+apexcode -y
   `,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		app, err := setupAppWithProgressBar(cmd)
@@ -99,7 +99,7 @@ crush -y
 		if _, err := program.Run(); err != nil {
 			event.Error(err)
 			slog.Error("TUI run error", "error", err)
-			return errors.New("Crush crashed. If metrics are enabled, we were notified about it. If you'd like to report it, please copy the stacktrace above and open an issue at https://github.com/charmbracelet/crush/issues/new?template=bug.yml") //nolint:staticcheck
+			return errors.New("ApexCode crashed. If metrics are enabled, we were notified about it. If you'd like to report it, please copy the stacktrace above and open an issue at https://github.com/apexcode/apexcode/issues/new?template=bug.yml") //nolint:staticcheck
 		}
 		return nil
 	},
@@ -195,7 +195,7 @@ func setupApp(cmd *cobra.Command) (*app.App, error) {
 	}
 	cfg.Permissions.SkipRequests = yolo
 
-	if err := createDotCrushDir(cfg.Options.DataDirectory); err != nil {
+	if err := createDotApexCodeDir(cfg.Options.DataDirectory); err != nil {
 		return nil, err
 	}
 
@@ -225,7 +225,7 @@ func setupApp(cmd *cobra.Command) (*app.App, error) {
 }
 
 func shouldEnableMetrics() bool {
-	if v, _ := strconv.ParseBool(os.Getenv("CRUSH_DISABLE_METRICS")); v {
+	if v, _ := strconv.ParseBool(os.Getenv("APEXCODE_DISABLE_METRICS")); v {
 		return false
 	}
 	if v, _ := strconv.ParseBool(os.Getenv("DO_NOT_TRACK")); v {
@@ -272,7 +272,7 @@ func ResolveCwd(cmd *cobra.Command) (string, error) {
 	return cwd, nil
 }
 
-func createDotCrushDir(dir string) error {
+func createDotApexCodeDir(dir string) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return fmt.Errorf("failed to create data directory: %q %w", dir, err)
 	}

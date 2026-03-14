@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/permission"
-	"github.com/charmbracelet/crush/internal/shell"
+	"github.com/apexcode/apexcode/internal/config"
+	"github.com/apexcode/apexcode/internal/permission"
+	"github.com/apexcode/apexcode/internal/shell"
 )
 
 type BashParams struct {
@@ -426,7 +426,8 @@ func countLines(s string) int {
 	if s == "" {
 		return 0
 	}
-	return len(strings.Split(s, "\n"))
+	// Count newlines directly without allocating a slice.
+	return strings.Count(s, "\n") + 1
 }
 
 func normalizeWorkingDir(path string) string {

@@ -10,8 +10,8 @@ import (
 	"sync"
 
 	"github.com/charlievieth/fastwalk"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/home"
+	"github.com/apexcode/apexcode/internal/csync"
+	"github.com/apexcode/apexcode/internal/home"
 	ignore "github.com/sabhiram/go-gitignore"
 )
 
@@ -70,8 +70,8 @@ var commonIgnorePatterns = sync.OnceValue(func() ignore.IgnoreParser {
 		".Spotlight-V100",
 		".fseventsd",
 
-		// Crush
-		".crush",
+		// ApexCode
+		".apexcode",
 
 		// macOS stuff
 		"OrbStack",
@@ -86,7 +86,7 @@ var homeIgnore = sync.OnceValue(func() ignore.IgnoreParser {
 	for _, name := range []string{
 		filepath.Join(home, ".gitignore"),
 		filepath.Join(home, ".config", "git", "ignore"),
-		filepath.Join(home, ".config", "crush", "ignore"),
+		filepath.Join(home, ".config", "apexcode", "ignore"),
 	} {
 		if bts, err := os.ReadFile(name); err == nil {
 			lines = append(lines, strings.Split(string(bts), "\n")...)
@@ -118,10 +118,10 @@ func NewDirectoryLister(rootPath string) *directoryLister {
 // - the given ignorePatterns
 // - [commonIgnorePatterns]
 // - ./.gitignore, ../.gitignore, etc, until dl.rootPath
-// - ./.crushignore, ../.crushignore, etc, until dl.rootPath
+// - ./.apexcodeignore, ../.apexcodeignore, etc, until dl.rootPath
 // ~/.config/git/ignore
 // ~/.gitignore
-// ~/.config/crush/ignore
+// ~/.config/apexcode/ignore
 func (dl *directoryLister) shouldIgnore(path string, ignorePatterns []string) bool {
 	if len(ignorePatterns) > 0 {
 		base := filepath.Base(path)
@@ -191,7 +191,7 @@ func (dl *directoryLister) checkParentIgnores(path string) bool {
 func (dl *directoryLister) getIgnore(path string) ignore.IgnoreParser {
 	return dl.ignores.GetOrSet(path, func() ignore.IgnoreParser {
 		var lines []string
-		for _, ign := range []string{".crushignore", ".gitignore"} {
+		for _, ign := range []string{".apexcodeignore", ".gitignore"} {
 			name := filepath.Join(path, ign)
 			if content, err := os.ReadFile(name); err == nil {
 				lines = append(lines, strings.Split(string(content), "\n")...)

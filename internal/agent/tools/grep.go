@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"charm.land/fantasy"
-	"github.com/charmbracelet/crush/internal/fsext"
+	"github.com/apexcode/apexcode/internal/fsext"
 )
 
 // regexCache provides thread-safe caching of compiled regex patterns
@@ -100,16 +100,28 @@ const (
 //go:embed grep.md
 var grepDescription []byte
 
-// escapeRegexPattern escapes special regex characters so they're treated as literal characters
+// regexMetaChars are characters that have special meaning in regex.
+var regexMetaChars = [256]bool{
+	'\\': true, '.': true, '+': true, '*': true, '?': true,
+	'(': true, ')': true, '[': true, ']': true, '{': true,
+	'}': true, '^': true, '$': true, '|': true,
+}
+
+// escapeRegexPattern escapes special regex characters so they're treated as literal characters.
+// Uses a single-pass string builder instead of multiple ReplaceAll calls.
 func escapeRegexPattern(pattern string) string {
-	specialChars := []string{"\\", ".", "+", "*", "?", "(", ")", "[", "]", "{", "}", "^", "$", "|"}
-	escaped := pattern
+	// Pre-allocate with some extra space for escapes.
+	var b strings.Builder
+	b.Grow(len(pattern) + len(pattern)/4)
 
-	for _, char := range specialChars {
-		escaped = strings.ReplaceAll(escaped, char, "\\"+char)
+	for i := 0; i < len(pattern); i++ {
+		c := pattern[i]
+		if regexMetaChars[c] {
+			b.WriteByte('\\')
+		}
+		b.WriteByte(c)
 	}
-
-	return escaped
+	return b.String()
 }
 
 func NewGrepTool(workingDir string) fantasy.AgentTool {
@@ -210,7 +222,7 @@ func searchWithRipgrep(ctx context.Context, pattern, path, include string) ([]gr
 	}
 
 	// Only add ignore files if they exist
-	for _, ignoreFile := range []string{".gitignore", ".crushignore"} {
+	for _, ignoreFile := range []string{".gitignore", ".apexcodeignore"} {
 		ignorePath := filepath.Join(path, ignoreFile)
 		if _, err := os.Stat(ignorePath); err == nil {
 			cmd.Args = append(cmd.Args, "--ignore-file", ignorePath)
@@ -290,7 +302,7 @@ func searchFilesWithRegex(pattern, rootPath, include string) ([]grepMatch, error
 		}
 	}
 
-	// Create walker with gitignore and crushignore support
+	// Create walker with gitignore and apexcodeignore support
 	walker := fsext.NewFastGlobWalker(rootPath)
 
 	err = filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
@@ -349,17 +361,72 @@ func searchFilesWithRegex(pattern, rootPath, include string) ([]grepMatch, error
 	return matches, nil
 }
 
-func fileContainsPattern(filePath string, pattern *regexp.Regexp) (bool, int, int, string, error) {
-	// Only search text files.
-	if !isTextFile(filePath) {
-		return false, 0, 0, "", nil
+// bufferPool reuses buffers for file reading to reduce allocations.
+var bufferPool = sync.Pool{
+	New: func() any {
+		buf := make([]byte, 512)
+		return &buf
+	},
+}
+
+// isTextFile checks if a file is a text file by examining its MIME type.
+func isTextFile(filePath string) bool {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+
+	bufPtr := bufferPool.Get().(*[]byte)
+	defer bufferPool.Put(bufPtr)
+	buffer := *bufPtr
+
+	n, err := file.Read(buffer)
+	if err != nil && err != io.EOF {
+		return false
 	}
 
+	contentType := http.DetectContentType(buffer[:n])
+	return strings.HasPrefix(contentType, "text/") ||
+		contentType == "application/json" ||
+		contentType == "application/xml" ||
+		contentType == "application/javascript" ||
+		contentType == "application/x-sh"
+}
+
+func fileContainsPattern(filePath string, pattern *regexp.Regexp) (bool, int, int, string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return false, 0, 0, "", err
 	}
 	defer file.Close()
+
+	// Check if text file first using pooled buffer (single file open).
+	bufPtr := bufferPool.Get().(*[]byte)
+	defer bufferPool.Put(bufPtr)
+	buffer := *bufPtr
+
+	n, err := file.Read(buffer)
+	if err != nil && err != io.EOF {
+		return false, 0, 0, "", nil
+	}
+
+	// Detect content type.
+	contentType := http.DetectContentType(buffer[:n])
+	isText := strings.HasPrefix(contentType, "text/") ||
+		contentType == "application/json" ||
+		contentType == "application/xml" ||
+		contentType == "application/javascript" ||
+		contentType == "application/x-sh"
+
+	if !isText {
+		return false, 0, 0, "", nil
+	}
+
+	// Reset file position to start scanning from beginning.
+	if _, err := file.Seek(0, 0); err != nil {
+		return false, 0, 0, "", err
+	}
 
 	scanner := bufio.NewScanner(file)
 	lineNum := 0
@@ -373,32 +440,6 @@ func fileContainsPattern(filePath string, pattern *regexp.Regexp) (bool, int, in
 	}
 
 	return false, 0, 0, "", scanner.Err()
-}
-
-// isTextFile checks if a file is a text file by examining its MIME type.
-func isTextFile(filePath string) bool {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return false
-	}
-	defer file.Close()
-
-	// Read first 512 bytes for MIME type detection.
-	buffer := make([]byte, 512)
-	n, err := file.Read(buffer)
-	if err != nil && err != io.EOF {
-		return false
-	}
-
-	// Detect content type.
-	contentType := http.DetectContentType(buffer[:n])
-
-	// Check if it's a text MIME type.
-	return strings.HasPrefix(contentType, "text/") ||
-		contentType == "application/json" ||
-		contentType == "application/xml" ||
-		contentType == "application/javascript" ||
-		contentType == "application/x-sh"
 }
 
 func globToRegex(glob string) string {

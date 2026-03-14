@@ -371,7 +371,7 @@
           "items": {
             "type": "string",
             "examples": [
-              "~/.config/crush/skills",
+              "~/.config/apexcode/skills",
               "./skills"
             ]
           },
@@ -400,9 +400,9 @@
         "data_directory": {
           "type": "string",
           "description": "Directory for storing application data (relative to working directory)",
-          "default": ".crush",
+          "default": ".apexcode",
           "examples": [
-            ".crush"
+            ".apexcode"
           ]
         },
         "disabled_tools": {

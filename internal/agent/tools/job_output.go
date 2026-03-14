@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"charm.land/fantasy"
-	"github.com/charmbracelet/crush/internal/shell"
+	"github.com/apexcode/apexcode/internal/shell"
 )
 
 const (

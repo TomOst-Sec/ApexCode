@@ -9,11 +9,11 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/atotto/clipboard"
-	hyperp "github.com/charmbracelet/crush/internal/agent/hyper"
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/oauth"
-	"github.com/charmbracelet/crush/internal/oauth/copilot"
-	"github.com/charmbracelet/crush/internal/oauth/hyper"
+	hyperp "github.com/apexcode/apexcode/internal/agent/hyper"
+	"github.com/apexcode/apexcode/internal/config"
+	"github.com/apexcode/apexcode/internal/oauth"
+	"github.com/apexcode/apexcode/internal/oauth/copilot"
+	"github.com/apexcode/apexcode/internal/oauth/hyper"
 	"github.com/pkg/browser"
 	"github.com/spf13/cobra"
 )
@@ -21,16 +21,16 @@ import (
 var loginCmd = &cobra.Command{
 	Aliases: []string{"auth"},
 	Use:     "login [platform]",
-	Short:   "Login Crush to a platform",
-	Long: `Login Crush to a specified platform.
+	Short:   "Login ApexCode to a platform",
+	Long: `Login ApexCode to a specified platform.
 The platform should be provided as an argument.
 Available platforms are: hyper, copilot.`,
 	Example: `
 # Authenticate with Charm Hyper
-crush login
+apexcode login
 
 # Authenticate with GitHub Copilot
-crush login copilot
+apexcode login copilot
   `,
 	ValidArgs: []cobra.Completion{
 		"hyper",

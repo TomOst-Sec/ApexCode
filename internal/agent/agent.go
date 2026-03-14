@@ -1,4 +1,4 @@
-// Package agent is the core orchestration layer for Crush AI agents.
+// Package agent is the core orchestration layer for ApexCode AI agents.
 //
 // It provides session-based AI agent functionality for managing
 // conversations, tool execution, and message handling. It coordinates
@@ -30,14 +30,14 @@ import (
 	"charm.land/fantasy/providers/openrouter"
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/catwalk/pkg/catwalk"
-	"github.com/charmbracelet/crush/internal/agent/hyper"
-	"github.com/charmbracelet/crush/internal/agent/tools"
-	"github.com/charmbracelet/crush/internal/config"
-	"github.com/charmbracelet/crush/internal/csync"
-	"github.com/charmbracelet/crush/internal/message"
-	"github.com/charmbracelet/crush/internal/permission"
-	"github.com/charmbracelet/crush/internal/session"
-	"github.com/charmbracelet/crush/internal/stringext"
+	"github.com/apexcode/apexcode/internal/agent/hyper"
+	"github.com/apexcode/apexcode/internal/agent/tools"
+	"github.com/apexcode/apexcode/internal/config"
+	"github.com/apexcode/apexcode/internal/csync"
+	"github.com/apexcode/apexcode/internal/message"
+	"github.com/apexcode/apexcode/internal/permission"
+	"github.com/apexcode/apexcode/internal/session"
+	"github.com/apexcode/apexcode/internal/stringext"
 	"github.com/charmbracelet/x/exp/charmtone"
 )
 
@@ -109,6 +109,7 @@ type sessionAgent struct {
 
 	messageQueue   *csync.Map[string, []SessionAgentCall]
 	activeRequests *csync.Map[string, context.CancelFunc]
+	activeWg       sync.WaitGroup // Tracks active requests for proper shutdown
 }
 
 type SessionAgentOptions struct {
@@ -210,9 +211,11 @@ func (a *sessionAgent) Run(ctx context.Context, call SessionAgentCall) (*fantasy
 	ctx = context.WithValue(ctx, tools.SessionIDContextKey, call.SessionID)
 
 	genCtx, cancel := context.WithCancel(ctx)
+	a.activeWg.Add(1)
 	a.activeRequests.Set(call.SessionID, cancel)
 
 	defer cancel()
+	defer a.activeWg.Done()
 	defer a.activeRequests.Del(call.SessionID)
 
 	history, files := a.preparePrompt(msgs, call.Attachments...)
@@ -565,7 +568,9 @@ func (a *sessionAgent) Summarize(ctx context.Context, sessionID string, opts fan
 	aiMsgs, _ := a.preparePrompt(msgs)
 
 	genCtx, cancel := context.WithCancel(ctx)
+	a.activeWg.Add(1)
 	a.activeRequests.Set(sessionID, cancel)
+	defer a.activeWg.Done()
 	defer a.activeRequests.Del(sessionID)
 	defer cancel()
 
@@ -654,7 +659,7 @@ func (a *sessionAgent) Summarize(ctx context.Context, sessionID string, opts fan
 }
 
 func (a *sessionAgent) getCacheControlOptions() fantasy.ProviderOptions {
-	if t, _ := strconv.ParseBool(os.Getenv("CRUSH_DISABLE_ANTHROPIC_CACHE")); t {
+	if t, _ := strconv.ParseBool(os.Getenv("APEXCODE_DISABLE_ANTHROPIC_CACHE")); t {
 		return fantasy.ProviderOptions{}
 	}
 	return fantasy.ProviderOptions{
@@ -931,30 +936,30 @@ func (a *sessionAgent) CancelAll() {
 	if !a.IsBusy() {
 		return
 	}
+
+	// Cancel all active requests.
 	for key := range a.activeRequests.Seq2() {
 		a.Cancel(key) // key is sessionID
 	}
 
-	timeout := time.After(5 * time.Second)
-	for a.IsBusy() {
-		select {
-		case <-timeout:
-			return
-		default:
-			time.Sleep(200 * time.Millisecond)
-		}
+	// Wait for all requests to complete with timeout.
+	done := make(chan struct{})
+	go func() {
+		a.activeWg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		return
+	case <-time.After(5 * time.Second):
+		slog.Warn("Timeout waiting for active requests to complete")
+		return
 	}
 }
 
 func (a *sessionAgent) IsBusy() bool {
-	var busy bool
-	for cancelFunc := range a.activeRequests.Seq() {
-		if cancelFunc != nil {
-			busy = true
-			break
-		}
-	}
-	return busy
+	return a.activeRequests.Len() > 0
 }
 
 func (a *sessionAgent) IsSessionBusy(sessionID string) bool {

@@ -2,8 +2,8 @@ package list
 
 import (
 	tea "charm.land/bubbletea/v2"
-	"github.com/charmbracelet/crush/internal/tui/components/core/layout"
-	"github.com/charmbracelet/crush/internal/tui/util"
+	"github.com/apexcode/apexcode/internal/tui/components/core/layout"
+	"github.com/apexcode/apexcode/internal/tui/util"
 )
 
 type Group[T Item] struct {
